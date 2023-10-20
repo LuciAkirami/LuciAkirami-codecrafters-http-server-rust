@@ -2,8 +2,8 @@
 //use clap::Parser;
 #![allow(unused_imports)]
 use std::io::{prelude::*, BufReader, Read, Write};
-use std::net::TcpListener;
 use std::net::TcpStream;
+use std::net::{Shutdown, TcpListener};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -80,12 +80,47 @@ fn main() {
 }
 
 fn handle_connetions(mut stream: TcpStream, dir: &str) {
-    let buffer = BufReader::new(&mut stream);
-    let http_request: Vec<_> = buffer
-        .lines()
-        .map(|result| result.unwrap())
-        .take_while(|result| !result.is_empty())
-        .collect();
+    //let mut other_stream = stream.try_clone().unwrap();
+    let mut buffer = BufReader::new(&mut stream);
+    //let extra_buffer = BufReader::new(&mut other_stream);
+    // let http_request: Vec<_> = buffer
+    //     .lines()
+    //     .map(|result| result.unwrap())
+    //     .take_while(|result| !result.is_empty())
+    //     .collect();
+
+    let mut http_request: Vec<String> = Vec::new();
+    loop {
+        let mut line = String::new();
+        buffer.read_line(&mut line).unwrap();
+        if line == "\r\n" || line == "\n" {
+            break; // End of headers
+        }
+        http_request.push(line);
+    }
+
+    let mut body: Vec<u8> = vec![101];
+
+    if http_request.iter().any(|line| line.starts_with("POST")) {
+        // Handle POST request
+
+        // Parse the Content-Length header to determine the body size
+        let content_length: usize = http_request
+            .iter()
+            .filter(|line| line.starts_with("Content-Length"))
+            .flat_map(|line| line.split_whitespace().nth(1))
+            .filter_map(|length| length.parse().ok())
+            .next()
+            .unwrap_or(0);
+
+        // Read the request body
+        body = Vec::with_capacity(content_length);
+        buffer
+            .take(content_length as u64)
+            .read_to_end(&mut body)
+            .unwrap();
+        println!("Body: {body:?}");
+    }
 
     let status_line: Vec<_> = http_request.get(0).unwrap().split(' ').collect();
     let uri = status_line[1];
@@ -138,7 +173,7 @@ fn handle_connetions(mut stream: TcpStream, dir: &str) {
     }
     dbg!(uri);
     let file_uri = uri.split('/').collect::<Vec<_>>();
-    if file_uri.len() > 2 && file_uri[1] == "files" {
+    if file_uri.len() > 2 && file_uri[1] == "files" && status_line[0] == "GET" {
         let dir_path = dir.clone().to_string();
 
         let file_path = dir_path + "/" + file_uri[2];
@@ -177,6 +212,40 @@ fn handle_connetions(mut stream: TcpStream, dir: &str) {
             println!("total bytes sent: {_total_bytes_sent}");
             return;
         }
+    }
+
+    if file_uri.len() > 2 && file_uri[1] == "files" && status_line[0] == "POST" {
+        let dir_path = dir.clone().to_string();
+        let file_path = dir_path + "/" + file_uri[2];
+
+        let mut file = File::create(file_path).unwrap();
+
+        let mut buffer2 = [0; 1024];
+        let mut _total_bytes_sent = 0;
+
+        //let mut request = String::new();
+        //other_stream.read_to_string(&mut request).unwrap();
+
+        println!("{http_request:#?}");
+        // loop {
+        //     let bytes_read = stream.read(&mut buffer2).unwrap();
+        //     if bytes_read == 0 {
+        //         break; // End of file
+        //     }
+
+        //     let bytes_sent = file.write(&buffer2[0..bytes_read]).unwrap();
+        //     _total_bytes_sent += bytes_sent;
+        // }
+        //let contents = &http_request[7];
+        println!("Body: {body:?}");
+        file.write(&body).unwrap();
+
+        println!("total bytes received: {_total_bytes_sent}");
+
+        let response = "HTTP/1.1 201r\n\r\n";
+        stream.write_all(response.as_bytes()).unwrap();
+        stream.shutdown(Shutdown::Both).unwrap();
+        return;
     }
     let response = "HTTP/1.1 404 Not Found\r\n\r\n";
     stream.write_all(response.as_bytes()).unwrap();
