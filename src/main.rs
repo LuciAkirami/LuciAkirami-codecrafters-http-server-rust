@@ -35,31 +35,31 @@ fn handle_connetions(mut stream: TcpStream) {
         .map(|result| result.unwrap())
         .take_while(|result| !result.is_empty())
         .collect();
-    // let path = http_request.get(0).unwrap();
-    // let fourth_value = path.char_indices().collect::<Vec<_>>()[4].1;
 
-    // if fourth_value == '/' {
-    //     let response = "HTTP/1.1 200 OK\r\n\r\n";
-    //     stream.write_all(response.as_bytes()).unwrap();
+    let status_line: Vec<_> = http_request.get(0).unwrap().split(' ').collect();
+    let uri = status_line[1];
+
+    // println!("{uri:?}");
+    // if uri == "/" {
+    //     let success_response = "HTTP/1.1 200 OK\r\n\r\n";
+    //     println!("success");
+    //     stream.write(success_response.as_bytes()).unwrap();
     // } else {
-    //     let response = "HTTP/1.1 404 Not Found\r\n\r\n";
-    //     stream.write_all(response.as_bytes()).unwrap();
+    //     let failure_response = "HTTP/1.1 404 Not Found\r\n\r\n";
+    //     println!("failure");
+    //     stream.write(failure_response.as_bytes()).unwrap();
     // }
 
-    let path: Vec<_> = http_request.get(0).unwrap().split(' ').collect();
-    let second_value = path[1];
-    println!("{second_value:?}");
-    if second_value == "/" {
-        let success_response = "HTTP/1.1 200 OK\r\n\r\n";
-        println!("success");
-        stream.write(success_response.as_bytes()).unwrap();
-    } else {
-        let failure_response = "HTTP/1.1 404 Not Found\r\n\r\n";
-        println!("failure");
-        stream.write(failure_response.as_bytes()).unwrap();
-    }
-    //println!("{indices:#?}");
-    //println!("Request: {http_request:#?}");
-    let response = "HTTP/1.1 200 OK\r\n\r\n";
-    stream.write_all(response.as_bytes()).unwrap();
+    let echo_string = uri.split('/').collect::<Vec<_>>()[2];
+    let echo_string_len = echo_string.len();
+    println!("Request: {http_request:#?}");
+    let response = format!(
+        "HTTP/1.1 200 OK\r\n\
+    Content-Type: text/plain\r\n\
+    Content-Length: {echo_string_len}\r\n\
+    \r\n\
+    {echo_string}"
+    );
+    println!("Response: {response}");
+    stream.write(response.as_bytes()).unwrap();
 }
