@@ -39,12 +39,14 @@ fn handle_connetions(mut stream: TcpStream) {
     let status_line: Vec<_> = http_request.get(0).unwrap().split(' ').collect();
     let uri = status_line[1];
 
-    // println!("{uri:?}");
-    // if uri == "/" {
-    //     let success_response = "HTTP/1.1 200 OK\r\n\r\n";
-    //     println!("success");
-    //     stream.write(success_response.as_bytes()).unwrap();
-    // } else {
+    println!("{uri:?}");
+    if uri == "/" {
+        let success_response = "HTTP/1.1 200 OK\r\n\r\n";
+        println!("success");
+        stream.write(success_response.as_bytes()).unwrap();
+        return;
+    }
+    // else {
     //     let failure_response = "HTTP/1.1 404 Not Found\r\n\r\n";
     //     println!("failure");
     //     stream.write(failure_response.as_bytes()).unwrap();
@@ -52,7 +54,7 @@ fn handle_connetions(mut stream: TcpStream) {
 
     let echo_uri = uri.split('/').collect::<Vec<_>>();
     println!("{echo_uri:?}");
-    if echo_uri.len() == 3 {
+    if echo_uri.len() == 3 && echo_uri[1] == "echo" {
         let echo_string = echo_uri[2];
         let echo_string_len = echo_string.len();
         println!("Request: {http_request:#?}");
