@@ -220,7 +220,7 @@ fn handle_connetions(mut stream: TcpStream, dir: &str) {
 
         let mut file = File::create(file_path).unwrap();
 
-        let mut buffer2 = [0; 1024];
+        //let mut buffer2 = [0; 1024];
         let mut _total_bytes_sent = 0;
 
         //let mut request = String::new();
