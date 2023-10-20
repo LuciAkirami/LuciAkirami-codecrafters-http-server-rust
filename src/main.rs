@@ -54,16 +54,18 @@ fn handle_connetions(mut stream: TcpStream) {
 
     let echo_uri = uri.split('/').collect::<Vec<_>>();
     println!("{echo_uri:?}");
-    if echo_uri.len() == 3 && echo_uri[1] == "echo" {
-        let echo_string = echo_uri[2];
-        let echo_string_len = echo_string.len();
+    if echo_uri.len() >= 2 && echo_uri[1] == "echo" {
+        let echo_string = &echo_uri[2..];
+        let echo_string_joined = echo_string.to_owned().join("/");
+        let echo_string_len = echo_string_joined.len();
+        println!("{echo_string:?}, {echo_string_joined:?}, {echo_string_len:?}");
         println!("Request: {http_request:#?}");
         let echo_response = format!(
             "HTTP/1.1 200 OK\r\n\
         Content-Type: text/plain\r\n\
         Content-Length: {echo_string_len}\r\n\
         \r\n\
-        {echo_string}"
+        {echo_string_joined}"
         );
         stream.write(echo_response.as_bytes()).unwrap();
         return;
