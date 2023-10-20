@@ -138,7 +138,7 @@ fn handle_connetions(mut stream: TcpStream, dir: &str) {
     }
     dbg!(uri);
     let file_uri = uri.split('/').collect::<Vec<_>>();
-    if file_uri.len() > 2 && file_uri[1] == "file" {
+    if file_uri.len() > 2 && file_uri[1] == "files" {
         let dir_path = dir.clone().to_string();
 
         let file_path = dir_path + "/" + file_uri[2];
