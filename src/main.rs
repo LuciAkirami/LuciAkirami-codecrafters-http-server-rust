@@ -5,6 +5,7 @@ use std::io::{prelude::*, BufReader, Read, Write};
 use std::net::TcpListener;
 use std::net::TcpStream;
 use std::path::Path;
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::{env, fs, fs::File};
 
@@ -16,16 +17,17 @@ use std::{env, fs, fs::File};
 fn main() {
     // You can use print statements as follows for debugging, they'll be visible when running tests.
     println!("Logs from your program will appear here!");
-    let dir_placeholder = env::args().skip(2).collect::<Vec<_>>();
-    let cloned_placeholder: Vec<String> = dir_placeholder.clone();
+    //let dir_placeholder = env::args().skip(2).collect::<Vec<_>>();
+    //let cloned_placeholder: Vec<String> = dir_placeholder.clone();
 
     // let dir: &'static str = match cloned_placeholder.get(0) {
     //     Some(value) => value,
     //     None => "",
     // };
-    let noone = "None".to_string();
-    let dir = cloned_placeholder.get(0).unwrap_or(&noone).clone();
-
+    let dir = env::args().nth(2).unwrap_or("None".to_string());
+    //let noone = "None".to_string();
+    //let mut dir = cloned_placeholder.get(0).unwrap_or(&noone).clone();
+    //let mut k = Arc::new(Mutex::new(dir));
     //dbg!(dir);
 
     // let dir_path = String::from("codecrafters-http-server-rust");
@@ -56,13 +58,15 @@ fn main() {
         match stream {
             Ok(_stream) => {
                 //println!("{:?}");
-                // thread::Scope::spawn(move || {
-                //     handle_connetions(_stream, dir);
-                // });
-                let my_closure = || handle_connetions(_stream, &dir);
-                thread::scope(|scope| {
-                    scope.spawn(my_closure);
+                //let new_dir = Arc::clone(&k);
+                let base_dir = dir.clone();
+                thread::spawn(move || {
+                    handle_connetions(_stream, &base_dir);
                 });
+                // let my_closure = || handle_connetions(_stream, &dir);
+                // thread::scope(|scope| {
+                //     scope.spawn(my_closure);
+                // });
 
                 println!("accepted new connection");
             }
