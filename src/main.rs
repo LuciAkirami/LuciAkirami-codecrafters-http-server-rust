@@ -1,14 +1,46 @@
 // Uncomment this block to pass the first stage
-#[allow(unused_imports)]
+//use clap::Parser;
+#![allow(unused_imports)]
 use std::io::{prelude::*, BufReader, Read, Write};
 use std::net::TcpListener;
 use std::net::TcpStream;
+use std::path::Path;
 use std::thread;
+use std::{env, fs, fs::File};
+
+// #[derive(Parser, Debug)]
+// struct Args {
+//     directory: String,
+// }
 
 fn main() {
     // You can use print statements as follows for debugging, they'll be visible when running tests.
     println!("Logs from your program will appear here!");
+    let dir: Vec<String> = env::args().skip(2).collect();
+    dbg!(dir);
 
+    let dir_path = String::from(
+        "/mnt/c/Users/AJAY/Desktop/projects/rust_beginner/scratch/codecrafters-http-server-rust",
+    );
+
+    let new_path = dir_path.clone() + "/your_server.sh";
+    // let p = fs::read_dir(dir_path)
+    //     .unwrap()
+    //     .map(|dir| dir.unwrap())
+    //     .collect::<Vec<_>>();
+    // dbg!(p.last());
+
+    let path_exists = Path::new(&new_path).exists();
+    dbg!(path_exists);
+
+    // for entry in fs::read_dir(&dir_path).unwrap() {
+    //     let dir = entry.unwrap();
+    //     let dir_list = dir.path();
+    //     println!("{dir_list:?}");
+    // }
+
+    // let args = Args::parse();
+    // dbg!(args.directory);
     // Uncomment this block to pass the first stage
     //
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
@@ -88,6 +120,49 @@ fn handle_connetions(mut stream: TcpStream) {
         );
         stream.write(user_agent_response.as_bytes()).unwrap();
         return;
+    }
+    dbg!(uri);
+    let file_uri = uri.split('/').collect::<Vec<_>>();
+    if file_uri.len() > 2 && file_uri[1] == "send" {
+        let dir_path = String::from(
+            "/mnt/c/Users/AJAY/Desktop/projects/rust_beginner/scratch/codecrafters-http-server-rust",
+        );
+
+        let file_path = dir_path.clone() + "/" + file_uri[2];
+
+        let file_exists = Path::new(&file_path).exists();
+        println!("{file_path:?} {file_exists:?}");
+        if file_exists {
+            let mut file = File::open(file_path).unwrap();
+
+            println!("{file:?}");
+
+            // Read the file and send it over the stream
+            let mut buffer = [0; 1024];
+            let mut _total_bytes_sent = 0;
+
+            // Build the response with the Content-Type header
+            let response = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {}\r\n\r\n",
+                file.metadata().unwrap().len()
+            );
+
+            // Send the response header
+            stream.write(response.as_bytes()).unwrap();
+
+            // Send the file content
+            loop {
+                let bytes_read = file.read(&mut buffer).unwrap();
+                if bytes_read == 0 {
+                    break; // End of file
+                }
+
+                let bytes_sent = stream.write(&buffer[0..bytes_read]).unwrap();
+                _total_bytes_sent += bytes_sent;
+            }
+            println!("total bytes sent: {_total_bytes_sent}");
+            return;
+        }
     }
     let response = "HTTP/1.1 404 Not Found\r\n\r\n";
     stream.write_all(response.as_bytes()).unwrap();
