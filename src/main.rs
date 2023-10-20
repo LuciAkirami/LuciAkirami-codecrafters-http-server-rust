@@ -29,15 +29,15 @@ fn main() {
 }
 
 fn handle_connetions(mut stream: TcpStream) {
-    // let buffer = BufReader::new(&mut stream);
-    // let http_request: Vec<_> = buffer
-    //     .lines()
-    //     .map(|result| result.unwrap())
-    //     .take_while(|result| !result.is_empty())
-    //     .collect();
-    // println!("Request: {http_request:#?}");
+    let buffer = BufReader::new(&mut stream);
+    let http_request: Vec<_> = buffer
+        .lines()
+        .map(|result| result.unwrap())
+        .take_while(|result| !result.is_empty())
+        .collect();
+    println!("Request: {http_request:#?}");
     let response = "HTTP/1.1 200 OK\r\n\r\n";
-    let strin = stream.read_to_string(&mut String::new());
-    println!("{strin:#?}");
+    //let strin = stream.read_to_string(&mut String::new());
+    //println!("{strin:#?}");
     stream.write_all(response.as_bytes()).unwrap();
 }
