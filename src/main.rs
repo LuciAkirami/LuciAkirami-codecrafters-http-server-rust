@@ -146,6 +146,7 @@ fn handle_connetions(mut stream: TcpStream, dir: &str) {
         let file_exists = Path::new(&file_path).exists();
         println!("{file_path:?} {file_exists:?}");
         if file_exists {
+            println!("{file_path:?}");
             let mut file = File::open(file_path).unwrap();
 
             println!("{file:?}");
