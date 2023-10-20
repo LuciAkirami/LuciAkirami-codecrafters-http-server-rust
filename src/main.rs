@@ -16,22 +16,29 @@ use std::{env, fs, fs::File};
 fn main() {
     // You can use print statements as follows for debugging, they'll be visible when running tests.
     println!("Logs from your program will appear here!");
-    let dir: Vec<String> = env::args().skip(2).collect();
-    dbg!(dir);
+    let dir_placeholder = env::args().skip(2).collect::<Vec<_>>();
+    let cloned_placeholder: Vec<String> = dir_placeholder.clone();
 
-    let dir_path = String::from(
-        "/mnt/c/Users/AJAY/Desktop/projects/rust_beginner/scratch/codecrafters-http-server-rust",
-    );
+    // let dir: &'static str = match cloned_placeholder.get(0) {
+    //     Some(value) => value,
+    //     None => "",
+    // };
+    let noone = "None".to_string();
+    let dir = cloned_placeholder.get(0).unwrap_or(&noone).clone();
 
-    let new_path = dir_path.clone() + "/your_server.sh";
-    // let p = fs::read_dir(dir_path)
-    //     .unwrap()
-    //     .map(|dir| dir.unwrap())
-    //     .collect::<Vec<_>>();
-    // dbg!(p.last());
+    //dbg!(dir);
 
-    let path_exists = Path::new(&new_path).exists();
-    dbg!(path_exists);
+    // let dir_path = String::from("codecrafters-http-server-rust");
+
+    // let new_path = dir_path.clone() + "/your_server.sh";
+    // // let p = fs::read_dir(dir_path)
+    // //     .unwrap()
+    // //     .map(|dir| dir.unwrap())
+    // //     .collect::<Vec<_>>();
+    // // dbg!(p.last());
+
+    // let path_exists = Path::new(&new_path).exists();
+    // dbg!(path_exists);
 
     // for entry in fs::read_dir(&dir_path).unwrap() {
     //     let dir = entry.unwrap();
@@ -49,8 +56,12 @@ fn main() {
         match stream {
             Ok(_stream) => {
                 //println!("{:?}");
-                thread::spawn(|| {
-                    handle_connetions(_stream);
+                // thread::Scope::spawn(move || {
+                //     handle_connetions(_stream, dir);
+                // });
+                let my_closure = || handle_connetions(_stream, &dir);
+                thread::scope(|scope| {
+                    scope.spawn(my_closure);
                 });
 
                 println!("accepted new connection");
@@ -64,7 +75,7 @@ fn main() {
     //streamer.read(&mut [0; 128]);
 }
 
-fn handle_connetions(mut stream: TcpStream) {
+fn handle_connetions(mut stream: TcpStream, dir: &str) {
     let buffer = BufReader::new(&mut stream);
     let http_request: Vec<_> = buffer
         .lines()
@@ -123,12 +134,10 @@ fn handle_connetions(mut stream: TcpStream) {
     }
     dbg!(uri);
     let file_uri = uri.split('/').collect::<Vec<_>>();
-    if file_uri.len() > 2 && file_uri[1] == "send" {
-        let dir_path = String::from(
-            "/mnt/c/Users/AJAY/Desktop/projects/rust_beginner/scratch/codecrafters-http-server-rust",
-        );
+    if file_uri.len() > 2 && file_uri[1] == "file" {
+        let dir_path = dir.clone().to_string();
 
-        let file_path = dir_path.clone() + "/" + file_uri[2];
+        let file_path = dir_path + "/" + file_uri[2];
 
         let file_exists = Path::new(&file_path).exists();
         println!("{file_path:?} {file_exists:?}");
