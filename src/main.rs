@@ -71,6 +71,20 @@ fn handle_connetions(mut stream: TcpStream) {
         return;
     }
 
+    if uri == "/user-agent" {
+        let user_agent_line = http_request.get(2).unwrap();
+        let user_agent = user_agent_line.split(": ").collect::<Vec<_>>()[1];
+        let user_agent_len = user_agent.len();
+        let user_agent_response = format!(
+            "HTTP/1.1 200 OK\r\n\
+        Content-Type: text/plain\r\n\
+        Content-Length: {user_agent_len}\r\n\
+        \r\n\
+        {user_agent}"
+        );
+        stream.write(user_agent_response.as_bytes()).unwrap();
+        return;
+    }
     let response = "HTTP/1.1 404 Not Found\r\n\r\n";
     stream.write_all(response.as_bytes()).unwrap();
 }
