@@ -244,7 +244,7 @@ fn handle_connetions(mut stream: TcpStream, dir: &str) {
 
         println!("total bytes received: {_total_bytes_sent}");
 
-        let response = "HTTP/1.1 201r\n\r\n";
+        let response = "HTTP/1.1 201\n\r\n";
         stream.write_all(response.as_bytes()).unwrap();
         stream.shutdown(Shutdown::Both).unwrap();
         return;
