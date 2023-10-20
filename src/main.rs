@@ -158,7 +158,7 @@ fn handle_connetions(mut stream: TcpStream, dir: &str) {
     }
 
     if uri == "/user-agent" {
-        let user_agent_line = http_request.get(3).unwrap();
+        let user_agent_line = http_request.get(2).unwrap();
         let user_agent = user_agent_line.split(": ").collect::<Vec<_>>()[1];
         let user_agent_len = user_agent.len() - 2;
         let user_agent_response = format!(
