@@ -35,17 +35,29 @@ fn handle_connetions(mut stream: TcpStream) {
         .map(|result| result.unwrap())
         .take_while(|result| !result.is_empty())
         .collect();
-    let path = http_request.get(0).unwrap();
-    let fourth_value = path.char_indices().collect::<Vec<_>>()[4].1;
+    // let path = http_request.get(0).unwrap();
+    // let fourth_value = path.char_indices().collect::<Vec<_>>()[4].1;
 
-    if fourth_value == '/' {
-        let response = "HTTP/1.1 200 OK\r\n\r\n";
-        stream.write_all(response.as_bytes()).unwrap();
+    // if fourth_value == '/' {
+    //     let response = "HTTP/1.1 200 OK\r\n\r\n";
+    //     stream.write_all(response.as_bytes()).unwrap();
+    // } else {
+    //     let response = "HTTP/1.1 404 Not Found\r\n\r\n";
+    //     stream.write_all(response.as_bytes()).unwrap();
+    // }
+
+    let path: Vec<_> = http_request.get(0).unwrap().split(' ').collect();
+    let second_value = path[1];
+    println!("{second_value:?}");
+    if second_value == "/" {
+        let success_response = "HTTP/1.1 200 OK\r\n\r\n";
+        println!("success");
+        stream.write(success_response.as_bytes()).unwrap();
     } else {
-        let response = "HTTP/1.1 404 Not Found\r\n\r\n";
-        stream.write_all(response.as_bytes()).unwrap();
+        let failure_response = "HTTP/1.1 404 Not Found\r\n\r\n";
+        println!("failure");
+        stream.write(failure_response.as_bytes()).unwrap();
     }
-
     //println!("{indices:#?}");
     //println!("Request: {http_request:#?}");
     let response = "HTTP/1.1 200 OK\r\n\r\n";
